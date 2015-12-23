@@ -1,5 +1,5 @@
-(merge-env!
-  :dependencies '[[adzerk/bootlaces          "0.1.11" :scope "test"]
+(set-env!
+  :dependencies '[[adzerk/bootlaces          "0.1.13" :scope "test"]
                   [adzerk/boot-cljs          "1.7.170-3"]
                   [adzerk/boot-reload        "0.4.2"]
                   [compojure                 "1.4.0"]
@@ -24,7 +24,7 @@
 
 (def +version+ "0.0.1-SNAPSHOT")
 
-(bootlaces! +version+)
+(bootlaces! +version+ :dont-modify-paths? true)
 
 (task-options!
   pom {:project     'hoplon/notify
