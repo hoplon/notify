@@ -13,13 +13,14 @@
                   [ring/ring-defaults        "0.1.5"]
                   [adzerk/cljs-console       "0.1.1"]]
   :resource-paths #{"src/clj"}
-  :source-paths   #{"src/cljs" "src/hl"})
+  :source-paths   #{"src/cljs"})
 
 (require
   '[adzerk.boot-cljs      :refer [cljs]]
   '[adzerk.boot-reload    :refer [reload]]
   '[hoplon.boot-hoplon    :refer [hoplon prerender]]
-  '[pandeiro.boot-http    :refer [serve]])
+  '[pandeiro.boot-http    :refer [serve]]
+  '[adzerk.bootlaces      :refer :all])
 
 (def +version+ "0.0.1-SNAPSHOT")
 
