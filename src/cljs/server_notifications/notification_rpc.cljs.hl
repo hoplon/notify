@@ -1,0 +1,63 @@
+(ns server-notifications.notification-rpc
+  (:require
+    [castra.core :refer [mkremote]]
+    [adzerk.cljs-console :as log :include-macros true]))
+
+(def notification-registry (atom {}))
+
+(defn register-notification!
+  "Assign the function to be called when a given type of notification is received.
+   The function takes one argument--the value of a notification."
+  [notification-type f]
+  (swap! notification-registry
+         (fn [old]
+           (assoc old notification-type f))))
+
+(defc server-notifications {:last-id 0 :notifications {}})
+(defc error nil)
+(defc loading [])
+(defc last-id 0)
+
+;; show stack trace in the console when rpc fails
+(cell= (when-let [s (some-> error .-serverStack)]
+         (log/group- "RPC Error: '(.-message error)" (log/error "'{s}"))))
+
+(defn unknown-notification-type
+  "Logs an error when a server notification with no assigned function is received."
+  [nt v]
+  (log/error (str "Unrecognized notification: " nt "=" v)))
+
+(defn process-notifications [s]
+  "Process all the new notifications received from the server."
+  (let [lst-id @last-id
+        latest-id (:last-id s)
+        notifications (:notifications s)
+        sorted-notifications (reduce (fn [smap nentry]
+                                       (let [k (nentry 0)
+                                             n (nentry 1)]
+                                         (if (> k lst-id)
+                                           (assoc smap k n)
+                                           smap)))
+                                     (sorted-map)
+                                     notifications)]
+    (reduce (fn [_ nentry]
+              (let [n (nentry 1)
+                    nt (:notification-type n)
+                    v (:value n)
+                    f (nt @notification-registry)]
+                (if (nil? f)
+                  (unknown-notification-type nt v)
+                  (f v))))
+            nil
+            sorted-notifications)
+    (reset! last-id latest-id)))
+
+(defc= notifications-processor (process-notifications server-notifications))
+
+(def get-notifications
+  (mkremote 'server-notifications.notification-api/get-notifications server-notifications error loading))
+
+(defn poll-server
+  "Send a request to the server for all the notifications for this session."
+  []
+  (get-notifications @last-id))
