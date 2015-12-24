@@ -36,6 +36,27 @@ All unacknowledged changes are sent with each query from a client, but that quer
 contains the number of the last processed change. So once a change is acknowledged
 by a client, it is dropped by the server. Meanwhile the client ignores any 
 incoming change with a sequence number not greater than what it has already processed.
-
 This simple protocol provides the necessary robustness while minimizing the amount
 of traffic passed between client and server dealing with changes of state.
+
+## Client API
+
+The client-side API for notify is just two functions: register-notification! and poll-server.
+
+The **register-notification!** is used to assign a function to a keyword defining a type of 
+change. It takes two arguments, the keyword and the function. The function passed takes
+only a single argument--the value of the change.
+
+The **poll-server** function is used to request changes from the server. Typical
+usage is:
+
+```
+(js/setInterval notify.notification-rpc/poll-server 300)
+```
+
+The poll-server function fetches any new changes and, for each change, calls the assigned 
+function with the value of the change.
+
+## Server API
+
+The **get-session-id** function 
