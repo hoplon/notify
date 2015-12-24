@@ -12,7 +12,7 @@
                   [ring                      "1.4.0"]
                   [ring/ring-defaults        "0.1.5"]
                   [adzerk/cljs-console       "0.1.1"]]
-  :resource-paths #{"src/clj"}
+  :resource-paths #{"src/clj src/cljs"}
   :source-paths   #{"src/cljs"})
 
 (require
