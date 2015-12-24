@@ -33,3 +33,11 @@
        :url         "https://github.com/hoplon/notify"
        :scm         {:url "https://github.com/hoplon/notify"}
        :license     {"EPL" "http://www.eclipse.org/legal/epl-v10.html"}})
+
+(deftask dev
+  "Build project for development."
+  []
+  (comp
+   (watch)
+   (hoplon  :manifest true)
+   (build-jar)))
