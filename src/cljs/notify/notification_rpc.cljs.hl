@@ -55,7 +55,7 @@
 (defc= notifications-processor (process-notifications server-notifications))
 
 (def get-notifications
-  (mkremote 'server-notifications.notification-api/get-notifications server-notifications error loading))
+  (mkremote 'notify.notification-api/get-notifications server-notifications error loading))
 
 (defn poll-server
   "Send a request to the server for all the notifications for this session."
