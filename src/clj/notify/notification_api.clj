@@ -1,4 +1,4 @@
-(ns server-notifications.notification-api
+(ns notify.notification-api
   (:require [castra.core :refer [defrpc *session*]])
   (:import [java.util UUID]))
 

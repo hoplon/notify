@@ -1,4 +1,4 @@
-(ns server-notifications.notification-rpc
+(ns notify.notification-rpc
   (:require
     [castra.core :refer [mkremote]]
     [adzerk.cljs-console :as log :include-macros true]))
