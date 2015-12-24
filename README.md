@@ -43,12 +43,13 @@ of traffic passed between client and server dealing with changes of state.
 
 The client-side API for notify is just two functions: register-notification! and poll-server.
 
-The **register-notification!** is used to assign a function to a keyword defining a type of 
+The **notify.notification-rpc/register-notification!** is used to assign a function to a 
+keyword defining a type of 
 change. It takes two arguments, the keyword and the function. The function passed takes
 only a single argument--the value of the change.
 
-The **poll-server** function is used to request changes from the server. Typical
-usage is:
+The **notify.notification-rpc/poll-server** function is used to request changes from the 
+server. Typical usage is:
 
 ```
 (js/setInterval notify.notification-rpc/poll-server 300)
@@ -59,4 +60,17 @@ function with the value of the change.
 
 ## Server API
 
-The **get-session-id** function 
+The server-side API for notify is just three functions: identify-session!, get-session-id
+and add-notification!.
+
+The **notify.notification-api/identify-session!** function assigns a random UUID as the 
+:session-id for the current session, as needed. This provides a unique identifier to every 
+session. It takes no arguments and the return value is true, allowing it to be used in a :rpc/pre expression in defrpc.
+
+The **notify.notification-api/get-session-id** returns the previously assigned 
+session id for the current session. It takes no arguments.
+
+The **notify.notification-api/get-session-id** function adds a server change to the table
+of changes to be sent to the clients. This function takes three arguments:
+the session-id of the client that should receive the change, the keyword used by the client to
+determine how to process the change, and the value of the change.
