@@ -20,7 +20,7 @@ attack.
 
 A chat application is a good example here. We are not talking about
 sending the response to a request from a client, as Castra already
-handles that very well. Rather, we are focused her on passing state
+handles that very well. Rather, we are focused here on passing state
 changes to a client which resulted from activity by other clients.
 
 The notify project is a first step in addressing this. Only changes
