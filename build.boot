@@ -21,7 +21,7 @@
   '[pandeiro.boot-http    :refer [serve]]
   '[adzerk.bootlaces      :refer :all])
 
-(def +version+ "0.0.1-SNAPSHOT")
+(def +version+ "0.0.1")
 
 (bootlaces! +version+ :dont-modify-paths? true)
 
