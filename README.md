@@ -40,6 +40,10 @@ incoming change with a sequence number not greater than what it has already proc
 This simple protocol provides the necessary robustness while minimizing the amount
 of traffic passed between client and server dealing with changes of state.
 
+## Demos
+
+See [castra-simple2](https://github.com/hoplon/demos/tree/master/castra-simple2)
+
 ## Client API
 
 The client-side API for notify is just two functions: register-notification! and poll-server.
