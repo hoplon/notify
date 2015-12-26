@@ -1,4 +1,5 @@
 # notify
+[![Clojars Project](http://clojars.org/hoplon/notify/latest-version.svg)](http://clojars.org/hoplon/notify)
 
 [Castra](https://github.com/hoplon/castra)
 is a great RPC service for developing applications in
