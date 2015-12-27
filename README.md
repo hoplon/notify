@@ -79,3 +79,10 @@ The **notify.notification-api/get-session-id** function adds a server change to 
 of changes to be sent to the clients. This function takes three arguments:
 the session-id of the client that should receive the change, the keyword used by the client to
 determine how to process the change, and the value of the change.
+
+## Change Log
+
+**0.0.1** Initial release.
+
+**0.0.2** Fixed the release process. The manifest 
+was missing. Added task deploy-release to boot.build.
