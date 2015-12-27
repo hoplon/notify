@@ -21,7 +21,7 @@
   '[pandeiro.boot-http    :refer [serve]]
   '[adzerk.bootlaces      :refer :all])
 
-(def +version+ "0.0.1")
+(def +version+ "0.0.2")
 
 (bootlaces! +version+ :dont-modify-paths? true)
 
@@ -40,3 +40,11 @@
    (watch)
    (hoplon  :manifest true)
    (build-jar)))
+
+(deftask deploy-release
+ "Build for release."
+ []
+ (comp
+   (hoplon :manifest true)
+   (build-jar)
+   (push-release)))
