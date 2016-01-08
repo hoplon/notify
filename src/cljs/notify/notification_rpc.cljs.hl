@@ -27,11 +27,9 @@
   [nt v]
   (log/error (str "Unrecognized notification: " nt "=" v)))
 
-(defn process-notifications [s]
+(defn process-notifications [notifications]
   "Process all the new notifications received from the server."
   (let [lst-id @last-id
-        latest-id (:last-id s)
-        notifications (:notifications s)
         sorted-notifications (reduce (fn [smap nentry]
                                        (let [k (nentry 0)
                                              n (nentry 1)]
@@ -40,17 +38,19 @@
                                            smap)))
                                      (sorted-map)
                                      notifications)]
-    (reduce (fn [_ nentry]
+    (reduce (fn [k nentry]
               (let [n (nentry 1)
                     nt (:notification-type n)
                     v (:value n)
                     f (nt @notification-registry)]
                 (if (nil? f)
                   (unknown-notification-type nt v)
-                  (f v))))
+                  (do
+                    (f v)
+                    (reset! last-id k)))))
             nil
             sorted-notifications)
-    (reset! last-id latest-id)))
+    ))
 
 (defc= notifications-processor (process-notifications server-notifications))
 
@@ -58,6 +58,6 @@
   (mkremote 'notify.notification-api/get-notifications server-notifications error loading))
 
 (defn poll-server
-  "Send a request to the server for all the notifications for this session."
+  "Send a request to the server for all the new notifications for this session."
   []
   (get-notifications @last-id))

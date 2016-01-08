@@ -22,7 +22,7 @@
   '[pandeiro.boot-http    :refer [serve]]
   '[adzerk.bootlaces      :refer :all])
 
-(def +version+ "0.0.3")
+(def +version+ "0.0.3-SNAPSHOT")
 
 (bootlaces! +version+ :dont-modify-paths? true)
 
@@ -38,7 +38,6 @@
   "Build project for development."
   []
   (comp
-;   (watch)
    (hoplon  :manifest true)
    (build-jar)))
 
