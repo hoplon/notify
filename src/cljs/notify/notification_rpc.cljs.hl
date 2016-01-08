@@ -13,7 +13,7 @@
          (fn [old]
            (assoc old notification-type f))))
 
-(defc server-notifications {:last-id 0 :notifications {}})
+(defc server-notifications {})
 (defc error nil)
 (defc loading [])
 (defc last-id 0)
@@ -38,8 +38,9 @@
                                            smap)))
                                      (sorted-map)
                                      notifications)]
-    (reduce (fn [k nentry]
-              (let [n (nentry 1)
+    (reduce (fn [_ nentry]
+              (let [k (nentry 0)
+                    n (nentry 1)
                     nt (:notification-type n)
                     v (:value n)
                     f (nt @notification-registry)]
