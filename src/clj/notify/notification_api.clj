@@ -32,7 +32,6 @@
   (swap!
     aged-sessions
     (fn [pm]
-      (if (contains? pm session-id)
         (let [last-sent (+ 1 (get-last-sent pm session-id))
               pm (assoc-last-sent pm session-id last-sent)
               unacked-sesion-notifications (get-unacked-notifications pm session-id)
@@ -41,16 +40,11 @@
                                              last-sent
                                              {:notification-type type :value value})
               pm (assoc-unacked-notifications pm session-id unacked-sesion-notifications)]
-          pm)
-        (let [pm (add-session pm session-id (System/currentTimeMillis) 0
-                              {1 {:notification-type type :value value}})
-              pm (assoc-last-sent pm session-id 1)]
-          pm)))))
+          pm))))
 
 (defn drop-acked-notifications
   "Remove all notifications with an ack <= last-ack"
   [pm session-id last-ack]
-  (if (contains? pm session-id)
     (let [unacked-sesion-notifications (get-unacked-notifications pm session-id)
           unacked-sesion-notifications (reduce
                                          (fn [m k]
@@ -60,8 +54,7 @@
                                          unacked-sesion-notifications
                                          (keys unacked-sesion-notifications))
           pm (assoc-unacked-notifications pm session-id unacked-sesion-notifications)]
-      pm)
-    pm))
+      pm))
 
 (defn get-session-id
   "Returns the session id (a UUID string) assigned to the current session."
@@ -75,18 +68,31 @@
     (swap! *session* assoc :session-id (.toString (UUID/randomUUID))))
   true)
 
+(defn make-session [last-ack session-id]
+  (swap!
+    aged-sessions
+    (fn [pm]
+      (let [pm (if (get pm session-id)
+                 pm
+                 (do
+                   (add-session pm session-id (System/currentTimeMillis) last-ack {})))
+            pm (if (>= (get-max-sessions) (count pm))
+                 pm
+                 (do
+                   (pop pm)))]
+      pm))))
+
 (defrpc get-notifications
         "An rpc call to return all the new notifications for the current session."
         [last-ack & [session-id]]
         {:rpc/pre [(nil? session-id) (identify-session!)]}
         (let [session-id (or session-id (get-session-id))
               timestamp (System/currentTimeMillis)]
+          (make-session last-ack session-id)
           (swap!
             aged-sessions
             (fn [pm]
-              (if (contains? pm session-id)
                 (let [pm (assoc-timestamp pm session-id timestamp)
                       pm (drop-acked-notifications pm session-id last-ack)]
-                  pm)
-                (add-session pm session-id timestamp last-ack {}))))
+                  pm)))
           (get-unacked-notifications @aged-sessions session-id)))
