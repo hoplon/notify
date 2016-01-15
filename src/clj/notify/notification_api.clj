@@ -19,7 +19,6 @@
 
 (defn add-session [pm session-id timestamp ack notifications]
   (assoc pm session-id [timestamp ack notifications]))
-(defn sessions-count [] (count @aged-sessions))
 (defn get-timestamp [pm session-id]
   (get-in pm [session-id 0]))
 (defn assoc-timestamp [pm session-id timestamp]

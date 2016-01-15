@@ -46,8 +46,6 @@ See [castra-simple2](https://github.com/hoplon/demos/tree/master/castra-simple2)
 
 ## Client API
 
-The client-side API for notify is just two functions: register-notification! and poll-server.
-
 The **notify.notification-rpc/register-notification!** is used to assign a function to a 
 keyword defining a type of 
 change. It takes two arguments, the keyword and the function. The function passed takes
@@ -63,22 +61,47 @@ server. Typical usage is:
 The poll-server function fetches any new changes and, for each change, calls the assigned 
 function with the value of the change.
 
+An input cell, **loading**, can be used to indicate when castra is loading
+data from the server. This can be passed as the last argument to mkremote. Sample display:
+
+```
+(div
+    :id "loading"
+    :fade-toggle loading?
+    :css {:display "none"}
+    "loading...")
+```
+
+The input cell, **last-id**, holds the id of the last notification processed. This needs to be passed in
+the the first request passed to a server if that request is made before the server is polled,
+as such requests must ensure that there is a session for the client. And creating a session requires
+the last-id.
+
 ## Server API
 
-The server-side API for notify is just three functions: identify-session!, get-session-id
-and add-notification!.
+The **get-max-sessions** function returns the maximum number of sessions.
+When exceeded, the session which has not polled for the longest period is dropped.
+
+The **set-max-sessions!** function sets the maximum number of sessions.
+
+The **get-session-count** function returns the number of sessions.
 
 The **notify.notification-api/identify-session!** function assigns a random UUID as the 
 :session-id for the current session, as needed. This provides a unique identifier to every 
-session. It takes no arguments and the return value is true, allowing it to be used in a :rpc/pre expression in defrpc.
+session. It takes no arguments and the return value is true, 
+allowing it to be used in a :rpc/pre expression in defrpc.
 
 The **notify.notification-api/get-session-id** returns the previously assigned 
 session id for the current session. It takes no arguments.
 
-The **notify.notification-api/get-session-id** function adds a server change to the table
+The **notify.notification-api/add-notification!** function adds a server change to the table
 of changes to be sent to the clients. This function takes three arguments:
 the session-id of the client that should receive the change, the keyword used by the client to
 determine how to process the change, and the value of the change.
+
+The **make-session!** function initializes a session. This function takes two arguments:
+the last-id from the client and the session-id. Call this function when processing a request
+which was sent before the initial poll from the client.
 
 ## Change Log
 
@@ -86,3 +109,9 @@ determine how to process the change, and the value of the change.
 
 **0.0.2** Fixed the release process. The manifest 
 was missing. Added task deploy-release to boot.build.
+
+**0.1.0** When there are too many sessions (the default is 1,000),
+the older sessions are dropped.
+
+This was a major change, breaking backward compatibility, as session data
+is now kept in a priority-map.
