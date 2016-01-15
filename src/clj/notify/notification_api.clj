@@ -3,6 +3,14 @@
             [clojure.data.priority-map :refer [priority-map-keyfn]])
   (:import [java.util UUID Comparator]))
 
+;default decay min=200, max=3000, inc=100 (milliseconds)
+(defonce decay (atom [200 3000 100]))
+(defn get-decay
+  "Returns the decay spec vector [min, max, inc]"
+  [] @decay)
+(defn set-decay! [min max inc]
+  (reset! decay [min max inc]))
+
 (defonce max-sessions (atom 1000))
 (defn get-max-sessions
   "Returns the maximum number of sessions.
@@ -90,17 +98,31 @@
                    (pop pm)))]
       pm))))
 
+(defn update-on-ack! [last-ack session-id]
+  (swap!
+    aged-sessions
+    (fn [pm]
+      (let [pm (assoc-timestamp pm session-id (System/currentTimeMillis))
+            pm (drop-acked-notifications pm session-id last-ack)]
+        pm))))
+
 (defrpc get-notifications
         "An rpc call to return all the new notifications for the current session."
         [last-ack & [session-id]]
         {:rpc/pre [(nil? session-id) (identify-session!)]}
-        (let [session-id (or session-id (get-session-id))
-              timestamp (System/currentTimeMillis)]
+        (let [session-id (or session-id (get-session-id))]
           (make-session! last-ack session-id)
-          (swap!
-            aged-sessions
-            (fn [pm]
-                (let [pm (assoc-timestamp pm session-id timestamp)
-                      pm (drop-acked-notifications pm session-id last-ack)]
-                  pm)))
+          (update-on-ack! last-ack session-id)
+          (get-unacked-notifications @aged-sessions session-id)))
+
+(defrpc smart-get-notifications
+        "Check the decay specs, add a notification if needed, and then
+        return the unacked notifications."
+        [decay-specs last-ack & session-id]
+        {:rpc/pre [(nil? session-id) (identify-session!)]}
+        (let [session-id (or session-id (get-session-id))]
+          (make-session! last-ack session-id)
+          (update-on-ack! last-ack session-id)
+          (if (not= decay-specs @decay)
+            (add-notification! session-id :decay @decay))
           (get-unacked-notifications @aged-sessions session-id)))
