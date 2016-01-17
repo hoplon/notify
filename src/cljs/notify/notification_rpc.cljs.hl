@@ -18,6 +18,26 @@
 (defc loading [])
 (defc last-id 0)
 
+;default decay min=200, max=3000, inc=100 (milliseconds)
+(defonce decay (atom [200 3000 100]))
+
+;delay between smart polls
+(defonce delay (atom (@decay 0)))
+
+(defonce timeout-id (atom nil))
+
+(defn reset-delay! []
+  (reset! delay (@decay 0)))
+
+(defn inc-delay! []
+  (swap! delay
+         (fn [old]
+           (let [ndelay (+ old (@decay 2))
+                 mx (@decay 1)]
+             (if (> ndelay mx)
+               mx
+               ndelay)))))
+
 ;; show stack trace in the console when rpc fails
 (cell= (when-let [s (some-> error .-serverStack)]
          (log/group- "RPC Error: '(.-message error)" (log/error "'{s}"))))
@@ -38,20 +58,23 @@
                                            smap)))
                                      (sorted-map)
                                      notifications)]
-    (reduce (fn [_ nentry]
-              (let [k (nentry 0)
-                    n (nentry 1)
-                    nt (:notification-type n)
-                    v (:value n)
-                    f (nt @notification-registry)]
-                (if (nil? f)
-                  (unknown-notification-type nt v)
-                  (do
-                    (f v)
-                    (reset! last-id k)))))
-            nil
-            sorted-notifications)
-    ))
+    (if (empty? sorted-notifications)
+      (inc-delay!)
+      (do
+        (reset-delay!)
+        (reduce (fn [_ nentry]
+                  (let [k (nentry 0)
+                        n (nentry 1)
+                        nt (:notification-type n)
+                        v (:value n)
+                        f (nt @notification-registry)]
+                    (if (nil? f)
+                      (unknown-notification-type nt v)
+                      (do
+                        (f v)
+                        (reset! last-id k)))))
+                nil
+                sorted-notifications)))))
 
 (defc= notifications-processor (process-notifications server-notifications))
 
@@ -62,3 +85,17 @@
   "Send a request to the server for all the new notifications for this session."
   []
   (get-notifications @last-id))
+
+
+(defn set-decay! [specs] (reset! decay specs))
+
+(register-notification! :decay set-decay!)
+
+(def smart-get-notifications
+  (mkremote 'notify.notification-api/smart-get-notifications server-notifications error loading))
+
+(defn smart-poll []
+  (if @timeout-id
+    (js/clearTimeout))
+  (reset! timeout-id (js/setTimeout @delay))
+  (smart-get-notifications @decay @last-id))
