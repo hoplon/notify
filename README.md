@@ -130,6 +130,10 @@ for all clients, using eventual consistency.
 
 ## Change Log
 
+**0.2.0** Notifications now contain the server timestamp of when the notification was
+created. Functions which are registered on the client side to process notifications now
+take that timestamp as a second argument.
+
 **0.1.1** A second poll mechanism was added to reduce the amount of polling when notifications
 for that client are infrequent.
 
