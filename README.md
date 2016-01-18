@@ -61,7 +61,10 @@ server. Typical usage is:
 The poll-server function fetches any new changes and, for each change, calls the assigned 
 function with the value of the change.
 
-An input cell, **loading**, can be used to indicate when castra is loading
+The **notify.notification-rpc/smart-poll** function serves as an alternative to poll-server.
+Polling frequency is controlled by the server. 
+
+An input cell, **notify.notification-rpc/loading**, can be used to indicate when castra is loading
 data from the server. This can be passed as the last argument to mkremote. Sample display:
 
 ```
@@ -72,19 +75,20 @@ data from the server. This can be passed as the last argument to mkremote. Sampl
     "loading...")
 ```
 
-The input cell, **last-id**, holds the id of the last notification processed. This needs to be passed in
+The input cell, **notify.notification-rpc/last-id**, holds the id of the last notification processed. 
+This needs to be passed in
 the the first request passed to a server if that request is made before the server is polled,
 as such requests must ensure that there is a session for the client. And creating a session requires
 the last-id.
 
 ## Server API
 
-The **get-max-sessions** function returns the maximum number of sessions.
+The **notify.notification-api/get-max-sessions** function returns the maximum number of sessions.
 When exceeded, the session which has not polled for the longest period is dropped.
 
-The **set-max-sessions!** function sets the maximum number of sessions.
+The **notify.notification-api/set-max-sessions!** function sets the maximum number of sessions.
 
-The **get-session-count** function returns the number of sessions.
+The **notify.notification-api/get-session-count** function returns the number of sessions.
 
 The **notify.notification-api/identify-session!** function assigns a random UUID as the 
 :session-id for the current session, as needed. This provides a unique identifier to every 
@@ -99,19 +103,33 @@ of changes to be sent to the clients. This function takes three arguments:
 the session-id of the client that should receive the change, the keyword used by the client to
 determine how to process the change, and the value of the change.
 
-The **make-session!** function initializes a session. This function takes two arguments:
+The **notify.notification-api/make-session!** function initializes a session. This function takes two arguments:
 the last-id from the client and the session-id. Call this function when processing a request
 which was sent before the initial poll from the client.
 
+The **notify.notification-api/get-decay** function returns the poll decay spec in the form 
+[min-delay, max-delay, delay-inc], where min-delay is the minimum delay between smart client polls,
+max-delay is the maximum-delay and delay-inc is the amount the poll delay is incremented with
+each poll. On receipt of one or more notifications, the client halves the poll delay.
+
+The **notify.notification-api/set-decay** function updates the poll decay spec.
+It takes 3 arguments: min-delay, max-delay and delay-inc. With each smart poll request,
+the client passes its decay spec. If this differs from the server's decay spec, a notification
+with the new spec is sent to the client. The set-decay function thus controls the poll delay
+for all clients, using eventual consistency.
+
 ## Change Log
 
-**0.0.1** Initial release.
-
-**0.0.2** Fixed the release process. The manifest 
-was missing. Added task deploy-release to boot.build.
+**0.1.1** A second poll mechanism was added to reduce the amount of polling when notifications
+for that client are infrequent.
 
 **0.1.0** When there are too many sessions (the default is 1,000),
 the older sessions are dropped.
 
 This was a major change, breaking backward compatibility, as session data
 is now kept in a priority-map.
+
+**0.0.2** Fixed the release process. The manifest 
+was missing. Added task deploy-release to boot.build.
+
+**0.0.1** Initial release.
