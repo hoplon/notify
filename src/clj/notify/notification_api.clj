@@ -47,7 +47,9 @@
         unacked-sesion-notifications (assoc
                                        unacked-sesion-notifications
                                        last-sent
-                                       {:notification-type type :value value})
+                                       {:notification-type type
+                                        :value value
+                                        :timestamp (System/currentTimeMillis)})
         pm (assoc-unacked-notifications pm session-id unacked-sesion-notifications)]
     pm))
 

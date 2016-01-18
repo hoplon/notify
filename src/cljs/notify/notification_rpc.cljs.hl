@@ -71,11 +71,12 @@
                         n (nentry 1)
                         nt (:notification-type n)
                         v (:value n)
+                        ts (:timestamp n)
                         f (nt @notification-registry)]
                     (if (nil? f)
                       (unknown-notification-type nt v)
                       (do
-                        (f v)
+                        (f v ts)
                         (reset! last-id k)))))
                 nil
                 sorted-notifications))))
@@ -91,7 +92,7 @@
   (get-notifications @last-id))
 
 
-(defn set-decay! [specs] (reset! decay specs))
+(defn set-decay! [specs timestamp] (reset! decay specs))
 
 (register-notification! :decay set-decay!)
 

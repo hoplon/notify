@@ -58,7 +58,8 @@ and [castra-notify-chat](https://github.com/hoplon/demos/tree/master/castra-noti
 The **notify.notification-rpc/register-notification!** is used to assign a function to a 
 keyword defining a type of 
 change. It takes two arguments, the keyword and the function. The function passed takes
-only a single argument--the value of the change.
+two argument in turn--the value of the change and the timestamp for when the change
+occurred on the server.
 
 The **notify.notification-rpc/poll-server** function is used to request changes from the 
 server. Typical usage is:
