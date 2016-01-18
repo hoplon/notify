@@ -40,9 +40,18 @@ incoming change with a sequence number not greater than what it has already proc
 This simple protocol provides the necessary robustness while minimizing the amount
 of traffic passed between client and server dealing with changes of state.
 
+Another issue is scalability. If all clients poll the server at a rate optimized for 
+reasonable responsiveness when active, there will be an excessive number of polls
+from inactive clients. This does not scale well. To reduce the amount of traffic,
+a decay timer is added which increases the poll delay incrementally over time while
+reducing the delay geometrically when notifications are received by the client--much
+the way windowing is managed by TCP. Additionally, the decay spec for all clients
+is managed by the server, allowing a further increase in poll delays when under load.
+
 ## Demos
 
-See [castra-simple2](https://github.com/hoplon/demos/tree/master/castra-simple2)
+See [castra-notify-random](https://github.com/hoplon/demos/tree/master/castra-notify-random)
+and [castra-notify-chat](https://github.com/hoplon/demos/tree/master/castra-notify-chat)
 
 ## Client API
 
