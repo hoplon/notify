@@ -22,15 +22,21 @@
 (defonce decay (atom [200 3000 100]))
 
 ;delay between smart polls
-(defonce delay (atom (@decay 0)))
+(defonce poll-delay (atom (@decay 0)))
 
 (defonce timeout-id (atom nil))
 
-(defn reset-delay! []
-  (reset! delay (@decay 0)))
+(defn reduce-delay! []
+  (swap! poll-delay
+         (fn [old]
+           (let [ndelay (quot old 2)
+                 mn (@decay 0)]
+             (if (> mn ndelay)
+               mn
+               ndelay)))))
 
 (defn inc-delay! []
-  (swap! delay
+  (swap! poll-delay
          (fn [old]
            (let [ndelay (+ old (@decay 2))
                  mx (@decay 1)]
@@ -58,10 +64,8 @@
                                            smap)))
                                      (sorted-map)
                                      notifications)]
-    (if (empty? sorted-notifications)
-      (inc-delay!)
-      (do
-        (reset-delay!)
+    (when (not (empty? sorted-notifications))
+        (reduce-delay!)
         (reduce (fn [_ nentry]
                   (let [k (nentry 0)
                         n (nentry 1)
@@ -74,7 +78,7 @@
                         (f v)
                         (reset! last-id k)))))
                 nil
-                sorted-notifications)))))
+                sorted-notifications))))
 
 (defc= notifications-processor (process-notifications server-notifications))
 
@@ -95,7 +99,8 @@
   (mkremote 'notify.notification-api/smart-get-notifications server-notifications error loading))
 
 (defn smart-poll []
+  (inc-delay!)
   (if @timeout-id
     (js/clearTimeout))
-  (reset! timeout-id (js/setTimeout @delay))
+  (reset! timeout-id (js/setTimeout smart-poll @poll-delay))
   (smart-get-notifications @decay @last-id))
